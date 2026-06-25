@@ -11,7 +11,12 @@ constexpr float GLOBAL_LOWEST_FREQUENCY = 98.f; // Lowest note for a "bass" sing
 constexpr float GLOBAL_HIGHEST_FREQUENCY = 1567.98f; // Highest note for a "soprano" singer is G6
 
 constexpr float SHORTEST_BREATH_LENGTH = 2.f;
-constexpr float LONGEST_BREATH_LENGTH = 10.f;
+constexpr float LONGEST_BREATH_LENGTH = 5.f;
+
+enum class NoteSelectMode {
+	RANDOM,
+	LISTEN
+};
 
 struct Connection;
 
@@ -27,6 +32,7 @@ private:
 	std::vector<Connection> connections{};
 	double waveform_progress = 0.0;
 	double breath_progress = 0.0;
+	NoteSelectMode note_select_mode = NoteSelectMode::RANDOM;
 
 	size_t get_waveform_index_from_progress() const;
 	void change_note();
@@ -44,3 +50,5 @@ struct Connection {
 	Singer* singer;
 	float weight; // [0, 1]
 };
+
+std::array<float, WAVEFORM_LENGTH> make_waveform();

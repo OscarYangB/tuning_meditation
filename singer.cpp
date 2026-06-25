@@ -1,12 +1,39 @@
 #include "singer.h"
 #include "random.h"
 
+constexpr size_t NUMBER_OF_HARMONICS = 10;
+
+std::array<float, WAVEFORM_LENGTH> make_waveform() { // TODO different timbres and vowels
+	std::array<float, WAVEFORM_LENGTH> result{};
+
+	float amplitude = 1.f;
+	for (size_t harmonic_index = 1; harmonic_index < NUMBER_OF_HARMONICS; harmonic_index++) {
+		const float FREQUENCY = harmonic_index * (1.f / WAVEFORM_LENGTH); // TODO
+		amplitude *= 0.5f;
+		float random = rand_float(0.8f, 1.2f);
+		for (size_t i = 0; i < WAVEFORM_LENGTH; i++) {
+			result[i] += random * amplitude * std::sin(i * FREQUENCY * M_PI * 2.0);
+		}
+	}
+
+	return result;
+}
+
+
 size_t Singer::get_waveform_index_from_progress() const {
 	return std::floor(WAVEFORM_LENGTH * waveform_progress);
 }
 
 void Singer::change_note() {
-	current_frequency = rand_float(lowest_frequency, highest_frequency);
+	if (note_select_mode == NoteSelectMode::RANDOM) {
+		// TODO consonance optimization and avoid existing note
+		current_frequency = rand_float(lowest_frequency, highest_frequency);
+		note_select_mode = NoteSelectMode::LISTEN;
+	} else {
+		// TODO polyphonic pitch detection
+		note_select_mode = NoteSelectMode::RANDOM;
+	}
+
 	breath_length = rand_float(SHORTEST_BREATH_LENGTH, LONGEST_BREATH_LENGTH);
 }
 

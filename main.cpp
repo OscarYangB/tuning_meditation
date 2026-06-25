@@ -1,4 +1,4 @@
-#include "waveform.h"
+#include "singer.h"
 #include "export_audio.h"
 #include "random.h"
 
@@ -10,7 +10,7 @@ struct PositionedSinger {
 	float y;
 };
 
-void randomly_position_singers(std::vector<Singer>& singers) {
+void randomly_position_singers(std::vector<Singer>& singers) { // TODO disconnect far-apart nodes
 	std::vector<PositionedSinger> positioned_singers{};
 
 	for (Singer& singer : singers) {
@@ -39,7 +39,7 @@ int main() {
 
 	std::cout << "Initialized" << "\n";
 
-	for (int i = 0; i < SIMULATION_LENGTH; i++) {
+	for (int i = 0; i < SIMULATION_LENGTH; i++) { // TOOD End simulation using excitable media
 		for (Singer& singer : singers) {
 			singer.process();
 		}
