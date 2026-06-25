@@ -9,8 +9,8 @@ std::array<float, WAVEFORM_LENGTH> make_waveform() { // TODO different timbres a
 	float amplitude = 1.f;
 	for (size_t harmonic_index = 1; harmonic_index < NUMBER_OF_HARMONICS; harmonic_index++) {
 		const float FREQUENCY = harmonic_index * (1.f / WAVEFORM_LENGTH); // TODO
-		amplitude *= 0.5f;
-		float random = rand_float(0.8f, 1.2f);
+		amplitude *= (0.5f + rand_float(-0.05f, 0.05f));
+		float random = rand_float(0.5f, 1.5f);
 		for (size_t i = 0; i < WAVEFORM_LENGTH; i++) {
 			result[i] += random * amplitude * std::sin(i * FREQUENCY * M_PI * 2.0);
 		}

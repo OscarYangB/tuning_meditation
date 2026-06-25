@@ -50,6 +50,7 @@ int main() {
 
 	std::cout << "Done" << "\n";
 
-	std::vector<float>& result = singers[0].get_result();
-	export_audio(result.data(), SIMULATION_LENGTH);
+	std::vector<float>& left = singers[0].get_result();
+	std::vector<float>& right = singers[1].get_result();
+	export_audio_stereo(left.data(), right.data(), SIMULATION_LENGTH);
 }
