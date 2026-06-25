@@ -22,6 +22,7 @@ struct Connection;
 
 class Singer {
 private:
+	size_t id;
 	std::array<float, WAVEFORM_LENGTH> waveform;
 	float lowest_frequency;
 	float highest_frequency;
@@ -38,7 +39,7 @@ private:
 	void change_note();
 
 public:
-	Singer(std::array<float, WAVEFORM_LENGTH> waveform, float lowest_frequency, float highest_frequency);
+	Singer(size_t id, std::array<float, WAVEFORM_LENGTH> waveform, float lowest_frequency, float highest_frequency);
 	void process();
 	void send();
 	void receive(float sample);

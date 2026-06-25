@@ -1,5 +1,6 @@
 #include "singer.h"
 #include "random.h"
+#include <iostream>
 
 constexpr size_t NUMBER_OF_HARMONICS = 10;
 
@@ -29,15 +30,18 @@ void Singer::change_note() {
 		// TODO consonance optimization and avoid existing note
 		current_frequency = rand_float(lowest_frequency, highest_frequency);
 		note_select_mode = NoteSelectMode::LISTEN;
+		std::cout << "Singer " << id << " sings random frequency " << current_frequency << "hz\n";
 	} else {
 		// TODO polyphonic pitch detection
 		note_select_mode = NoteSelectMode::RANDOM;
+		std::cout << "Singer " << id << " sings existing frequency " << current_frequency << "hz\n";
 	}
 
 	breath_length = rand_float(SHORTEST_BREATH_LENGTH, LONGEST_BREATH_LENGTH);
 }
 
-Singer::Singer(std::array<float, WAVEFORM_LENGTH> waveform, float lowest_frequency, float highest_frequency) {
+Singer::Singer(size_t id, std::array<float, WAVEFORM_LENGTH> waveform, float lowest_frequency, float highest_frequency) {
+	this->id = id;
 	this->waveform = waveform;
 	this->lowest_frequency = lowest_frequency;
 	this->highest_frequency = highest_frequency;

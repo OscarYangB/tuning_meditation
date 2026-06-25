@@ -31,8 +31,8 @@ void randomly_position_singers(std::vector<Singer>& singers) { // TODO disconnec
 
 int main() {
 	std::vector<Singer> singers{};
-	for (int i = 0; i < NUMBER_OF_SINGERS; i++) {
-		singers.emplace_back(make_waveform(), GLOBAL_LOWEST_FREQUENCY, GLOBAL_HIGHEST_FREQUENCY);
+	for (size_t i = 0; i < NUMBER_OF_SINGERS; i++) {
+		singers.emplace_back(i, make_waveform(), GLOBAL_LOWEST_FREQUENCY, GLOBAL_HIGHEST_FREQUENCY);
 	}
 
 	randomly_position_singers(singers);
