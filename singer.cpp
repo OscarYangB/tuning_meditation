@@ -1,11 +1,13 @@
 #include "singer.h"
+#include "random.h"
 
 size_t Singer::get_waveform_index_from_progress() const {
 	return std::floor(WAVEFORM_LENGTH * waveform_progress);
 }
 
 void Singer::change_note() {
-	current_frequency = ((highest_frequency - lowest_frequency) * static_cast<float>(rand()) / RAND_MAX) + lowest_frequency;
+	current_frequency = rand_float(lowest_frequency, highest_frequency);
+	breath_length = rand_float(SHORTEST_BREATH_LENGTH, LONGEST_BREATH_LENGTH);
 }
 
 Singer::Singer(std::array<float, WAVEFORM_LENGTH> waveform, float lowest_frequency, float highest_frequency) {
@@ -30,6 +32,12 @@ void Singer::send() {
 	waveform_progress += current_frequency * TIME_ELAPSED;
 	if (waveform_progress > 1.0) {
 		waveform_progress -= 1.0;
+	}
+
+	breath_progress += TIME_ELAPSED;
+	if (breath_progress > breath_length) {
+		change_note();
+		breath_progress -= breath_length;
 	}
 }
 

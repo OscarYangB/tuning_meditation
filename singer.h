@@ -10,6 +10,9 @@ constexpr size_t SIMULATION_LENGTH = SAMPLE_RATE * 100;
 constexpr float GLOBAL_LOWEST_FREQUENCY = 98.f; // Lowest note for a "bass" singer is G2
 constexpr float GLOBAL_HIGHEST_FREQUENCY = 1567.98f; // Highest note for a "soprano" singer is G6
 
+constexpr float SHORTEST_BREATH_LENGTH = 2.f;
+constexpr float LONGEST_BREATH_LENGTH = 10.f;
+
 struct Connection;
 
 class Singer {
@@ -17,11 +20,13 @@ private:
 	std::array<float, WAVEFORM_LENGTH> waveform;
 	float lowest_frequency;
 	float highest_frequency;
-
-	float current_frequency = 0.f;
-	std::vector<Connection> connections{};
+	float current_frequency;
 	std::vector<float> memory;
+	double breath_length;
+
+	std::vector<Connection> connections{};
 	double waveform_progress = 0.0;
+	double breath_progress = 0.0;
 
 	size_t get_waveform_index_from_progress() const;
 	void change_note();

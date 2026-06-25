@@ -1,7 +1,8 @@
 #include "waveform.h"
 #include "export_audio.h"
+#include "random.h"
 
-constexpr size_t NUMBER_OF_SINGERS = 3;
+constexpr size_t NUMBER_OF_SINGERS = 10;
 
 struct PositionedSinger {
 	Singer* singer;
@@ -13,8 +14,8 @@ void randomly_position_singers(std::vector<Singer>& singers) {
 	std::vector<PositionedSinger> positioned_singers{};
 
 	for (Singer& singer : singers) {
-		const float x = static_cast<float>(rand()) / RAND_MAX;
-		const float y = static_cast<float>(rand()) / RAND_MAX;
+		const float x = rand_float(0.f, 1.f);
+		const float y = rand_float(0.f, 1.f);
 		positioned_singers.emplace_back(PositionedSinger{&singer, x, y});
 	}
 
