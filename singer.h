@@ -10,8 +10,8 @@ constexpr size_t SIMULATION_LENGTH = SAMPLE_RATE * 100;
 constexpr float GLOBAL_LOWEST_FREQUENCY = 98.f; // Lowest note for a "bass" singer is G2
 constexpr float GLOBAL_HIGHEST_FREQUENCY = 1567.98f; // Highest note for a "soprano" singer is G6
 
-constexpr float SHORTEST_BREATH_LENGTH = 2.f;
-constexpr float LONGEST_BREATH_LENGTH = 5.f;
+constexpr float SHORTEST_BREATH_LENGTH = 3.f;
+constexpr float LONGEST_BREATH_LENGTH = 8.f;
 
 enum class NoteSelectMode {
 	RANDOM,

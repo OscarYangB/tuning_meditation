@@ -1,5 +1,6 @@
 #include "singer.h"
 #include "random.h"
+#include "frequency.h"
 #include <iostream>
 
 constexpr size_t NUMBER_OF_HARMONICS = 10;
@@ -30,11 +31,23 @@ void Singer::change_note() {
 		// TODO consonance optimization and avoid existing note
 		current_frequency = rand_float(lowest_frequency, highest_frequency);
 		note_select_mode = NoteSelectMode::LISTEN;
-		std::cout << "Singer " << id << " sings random frequency " << current_frequency << "hz\n";
+		//std::cout << "Singer " << id << " sings random frequency " << current_frequency << "hz\n";
 	} else {
-		// TODO polyphonic pitch detection
+		static constexpr size_t ANALYSIS_SAMPLE_LENGTH = 4096;
+		static constexpr size_t PADDED_LENGTH = 16384;
+		std::array<float, ANALYSIS_SAMPLE_LENGTH> samples_to_analyze{};
+		std::copy(memory.end() - samples_to_analyze.size(), memory.end(), samples_to_analyze.begin());
+		hann_window(samples_to_analyze.data(), samples_to_analyze.size());
+		std::vector<float> frequencies = fast_fourier_transform(samples_to_analyze.data(), samples_to_analyze.size(), PADDED_LENGTH);
+		frequencies.resize(frequencies.size() / 2);
+		std::vector<float> frequency_peaks = identify_peaks(frequencies, PADDED_LENGTH, SAMPLE_RATE);
+		// std::cout << "Singer" << id << "identified peaks: ";
+		// for (float peak : frequency_peaks) {
+		// 	std:: cout << peak << ", ";
+		// }
+		current_frequency = frequency_peaks[std::floor(rand_float(0, frequency_peaks.size()))];
 		note_select_mode = NoteSelectMode::RANDOM;
-		std::cout << "Singer " << id << " sings existing frequency " << current_frequency << "hz\n";
+		//std::cout << " and selected: " << current_frequency << "hz\n";
 	}
 
 	breath_length = rand_float(SHORTEST_BREATH_LENGTH, LONGEST_BREATH_LENGTH);

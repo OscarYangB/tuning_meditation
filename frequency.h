@@ -43,7 +43,16 @@ inline void hann_window(float* data, size_t length) {
 	}
 }
 
-inline std::vector<float> identify_peaks(const std::vector<float>& frequencies) {
+inline float index_to_frequency(size_t index, size_t length, size_t sample_rate) {
+	if (index == 0) {
+		return 0;
+	}
+	float wavelength_in_samples = static_cast<float>(length) / index;
+	float wavelength_in_seconds = wavelength_in_samples / sample_rate;
+	return 1.f / wavelength_in_seconds;
+}
+
+inline std::vector<float> identify_peaks(const std::vector<float>& frequencies, size_t length, size_t sample_rate) {
 	struct CandidatePeak {
 		size_t index;
 		float salience = 0.f;
@@ -58,12 +67,12 @@ inline std::vector<float> identify_peaks(const std::vector<float>& frequencies) 
 
 	static constexpr float THRESHOLD_COEFFICIENT = 0.2f;
 	const float THRESHOLD = THRESHOLD_COEFFICIENT * max_frequency;
-	for (size_t i = 1; i < std::floor(frequencies.size() / 3.f) - 1; i++) {
+	for (size_t i = 2; i < std::floor(frequencies.size() / 3.f) - 2; i++) {
 		if (frequencies[i] < THRESHOLD) {
 			continue;
 		}
 
-		bool is_local_max = frequencies[i-1] < frequencies[i] && frequencies[i] > frequencies[i+i];
+		bool is_local_max = frequencies[i-2] < frequencies[i-1] && frequencies[i-1] < frequencies[i] && frequencies[i] > frequencies[i+1] && frequencies[i+1] > frequencies[i+2];
 		if (!is_local_max) {
 			continue;
 		}
@@ -80,10 +89,10 @@ inline std::vector<float> identify_peaks(const std::vector<float>& frequencies) 
 		max_salience = std::max(max_salience, candidate.salience);
 	}
 	std::vector<float> results{};
-	const float SALIENCE_THRESHOLD = std::pow(0.1f, 0.25f) * max_salience;
+	const float SALIENCE_THRESHOLD = std::pow(0.4f, 0.25f) * max_salience;
 	for (CandidatePeak& candidate : candidates) {
 		if (candidate.salience > SALIENCE_THRESHOLD) {
-			results.emplace_back(frequencies[candidate.index]);
+			results.emplace_back(index_to_frequency(candidate.index, length, sample_rate));
 		}
 	}
 	return results;
