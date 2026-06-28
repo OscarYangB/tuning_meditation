@@ -2,7 +2,7 @@
 #include "export_audio.h"
 #include "random.h"
 
-constexpr size_t NUMBER_OF_SINGERS = 50;
+constexpr size_t NUMBER_OF_SINGERS = 30;
 
 struct PositionedSinger {
 	Singer* singer;

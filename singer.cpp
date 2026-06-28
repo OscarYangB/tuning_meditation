@@ -10,7 +10,7 @@ std::array<float, WAVEFORM_LENGTH> make_waveform() { // TODO different timbres a
 
 	float amplitude = 1.f;
 	for (size_t harmonic_index = 1; harmonic_index < NUMBER_OF_HARMONICS; harmonic_index++) {
-		const float FREQUENCY = harmonic_index * (1.f / WAVEFORM_LENGTH); // TODO
+		const float FREQUENCY = harmonic_index * (1.f / WAVEFORM_LENGTH);
 		amplitude *= (0.5f + rand_float(-0.05f, 0.05f));
 		float random = rand_float(0.5f, 1.5f);
 		for (size_t i = 0; i < WAVEFORM_LENGTH; i++) {
@@ -45,8 +45,14 @@ void Singer::change_note() {
 		// for (float peak : frequency_peaks) {
 		// 	std:: cout << peak << ", ";
 		// }
+		auto iter = std::remove_if(frequency_peaks.begin(), frequency_peaks.end(), [this](float frequency){
+			return frequency < lowest_frequency || frequency > highest_frequency;
+		});
+		frequency_peaks.erase(iter, frequency_peaks.end());
 		current_frequency = frequency_peaks[std::floor(rand_float(0, frequency_peaks.size()))];
-		note_select_mode = NoteSelectMode::RANDOM;
+		current_frequency = std::clamp(current_frequency, lowest_frequency, highest_frequency);
+		current_frequency = rand_float(current_frequency * 0.9f, current_frequency * 1.1f);
+		//note_select_mode = NoteSelectMode::RANDOM;
 		//std::cout << " and selected: " << current_frequency << "hz\n";
 	}
 
@@ -67,7 +73,8 @@ void Singer::process() {
 }
 
 void Singer::send() {
-	const float SAMPLE = waveform[get_waveform_index_from_progress()];
+	size_t index = get_waveform_index_from_progress();
+	const float SAMPLE = waveform[index];
 
 	for (Connection& connection : connections) {
 		connection.singer->receive(SAMPLE);
