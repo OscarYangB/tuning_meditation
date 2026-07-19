@@ -22,20 +22,25 @@ struct Connection;
 
 class Singer {
 private:
+	struct Waveform {
+		std::array<float, WAVEFORM_LENGTH> data;
+		float frequency;
+		double progress = 0.0;
+
+		float get();
+	};
+
 	size_t id;
-	std::array<float, WAVEFORM_LENGTH> waveform;
+	Waveform waveform;
 	float lowest_frequency;
 	float highest_frequency;
-	float current_frequency;
 	std::vector<float> memory;
 	double breath_length;
 
 	std::vector<Connection> connections{};
-	double waveform_progress = 0.0;
 	double breath_progress = 0.0;
 	NoteSelectMode note_select_mode = NoteSelectMode::RANDOM;
 
-	size_t get_waveform_index_from_progress() const;
 	void change_note();
 
 public:

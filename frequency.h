@@ -114,8 +114,11 @@ inline float calculate_dissonance(const std::vector<float>& frequencies_1, const
 	float normalizing_scale = 0.f;
 
 	for (size_t i = 0; i < frequencies_1.size(); i++) {
-		normalizing_scale += frequencies_1[i] * frequencies_1[i];
 		float frequency_1 = index_to_frequency(i, fft_size, sample_rate);
+		if (frequency_1 < 20.f) {
+			continue;
+		}
+		normalizing_scale += frequencies_1[i] * frequencies_1[i];
 
 		for (size_t j = i + 1; j < frequencies_2.size(); j++) {
 			float frequency_2 = index_to_frequency(j, fft_size, sample_rate);

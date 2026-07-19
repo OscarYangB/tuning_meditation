@@ -2,7 +2,7 @@
 #include "export_audio.h"
 #include "random.h"
 
-constexpr size_t NUMBER_OF_SINGERS = 30;
+constexpr size_t NUMBER_OF_SINGERS = 20; // TODO refactor into a parameters.h file
 
 struct PositionedSinger {
 	Singer* singer;
@@ -30,6 +30,8 @@ void randomly_position_singers(std::vector<Singer>& singers) { // TODO disconnec
 }
 
 int main() {
+	srand(1293812);
+
 	std::vector<Singer> singers{};
 	for (size_t i = 0; i < NUMBER_OF_SINGERS; i++) {
 		singers.emplace_back(i, make_waveform(), GLOBAL_LOWEST_FREQUENCY, GLOBAL_HIGHEST_FREQUENCY);
