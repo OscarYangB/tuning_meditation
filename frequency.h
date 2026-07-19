@@ -43,16 +43,16 @@ inline void hann_window(float* data, size_t length) {
 	}
 }
 
-inline float index_to_frequency(size_t index, size_t length, size_t sample_rate) {
+inline float index_to_frequency(size_t index, size_t fft_size, size_t sample_rate) {
 	if (index == 0) {
 		return 0;
 	}
-	float wavelength_in_samples = static_cast<float>(length) / index;
+	float wavelength_in_samples = static_cast<float>(fft_size) / index;
 	float wavelength_in_seconds = wavelength_in_samples / sample_rate;
 	return 1.f / wavelength_in_seconds;
 }
 
-inline std::vector<float> identify_peaks(const std::vector<float>& frequencies, size_t length, size_t sample_rate) {
+inline std::vector<float> identify_peaks(const std::vector<float>& frequencies, size_t fft_size, size_t sample_rate) {
 	struct CandidatePeak {
 		size_t index;
 		float salience = 0.f;
@@ -92,8 +92,41 @@ inline std::vector<float> identify_peaks(const std::vector<float>& frequencies, 
 	const float SALIENCE_THRESHOLD = std::pow(0.4f, 0.25f) * max_salience;
 	for (CandidatePeak& candidate : candidates) {
 		if (candidate.salience > SALIENCE_THRESHOLD) {
-			results.emplace_back(index_to_frequency(candidate.index, length, sample_rate));
+			results.emplace_back(index_to_frequency(candidate.index, fft_size, sample_rate));
 		}
 	}
 	return results;
+}
+
+inline float calculate_dissonance_of_partial(float frequency_1, float frequency_2) {
+	float critical_bandwidth = 1.72f * std::pow((frequency_2 + frequency_1) / 2.f, 0.65f);
+	float x = std::abs(frequency_2 - frequency_1) / critical_bandwidth;
+	if (x > 1.2f) {
+		return -1.f;
+	}
+	const float a = 0.25f;
+	return std::pow((std::exp(1.f)*x)/a * std::exp(-x/a), 2.f); // Bigand, Parncutt & Lerdahl 1996
+}
+
+// William Hutchinson & Leon Knopoff, The acoustic component of western consonance, 1978
+inline float calculate_dissonance(const std::vector<float>& frequencies_1, const std::vector<float>& frequencies_2, size_t fft_size, size_t sample_rate) {
+	float dissonance = 0.f;
+	float normalizing_scale = 0.f;
+
+	for (size_t i = 0; i < frequencies_1.size(); i++) {
+		normalizing_scale += frequencies_1[i] * frequencies_1[i];
+		float frequency_1 = index_to_frequency(i, fft_size, sample_rate);
+
+		for (size_t j = i + 1; j < frequencies_2.size(); j++) {
+			float frequency_2 = index_to_frequency(j, fft_size, sample_rate);
+			float g = calculate_dissonance_of_partial(frequency_1, frequency_2);
+			if (g < 0.f) {
+				break;
+			}
+			dissonance += frequencies_1[i] * frequencies_2[j] * g;
+			dissonance += frequencies_1[j] * frequencies_2[i] * g;
+		}
+	}
+
+	return (0.5f * dissonance) / normalizing_scale;
 }

@@ -70,7 +70,7 @@ inline void export_audio_stereo(float* left, float* right, size_t length) {
 	write(output_file, uint16_t{SAMPLE_SIZE * 8});
 	output_file << "data";
 	write(output_file, length * sizeof(float) * CHANNELS);
-	for (int i = 0; i < length; i++) {
+	for (size_t i = 0; i < length; i++) {
 		output_file.write(reinterpret_cast<const char*>(&left[i]), SAMPLE_SIZE);
 		output_file.write(reinterpret_cast<const char*>(&right[i]), SAMPLE_SIZE);
 	}
