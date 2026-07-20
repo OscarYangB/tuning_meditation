@@ -26,12 +26,14 @@ private:
 	float highest_frequency;
 	std::vector<float> memory;
 	double breath_length;
+	float volume;
 
 	std::vector<Connection> connections{};
 	double breath_progress = 0.0;
 	NoteSelectMode note_select_mode = NoteSelectMode::RANDOM;
 
 	void change_note();
+	float get_volume_envelope();
 
 public:
 	Singer(size_t id, std::array<float, WAVEFORM_LENGTH> waveform, float lowest_frequency, float highest_frequency);

@@ -11,3 +11,5 @@ constexpr float GLOBAL_LOWEST_FREQUENCY = 200.f;
 constexpr float GLOBAL_HIGHEST_FREQUENCY = 784.f;
 constexpr float SHORTEST_BREATH_LENGTH = 3.f;
 constexpr float LONGEST_BREATH_LENGTH = 8.f;
+constexpr float ATTACK_LENGTH = 0.5f;
+constexpr float RELEASE_LENGTH = 0.5f;

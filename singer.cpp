@@ -31,6 +31,7 @@ float Singer::Waveform::get() {
 
 void Singer::change_note() {
 	breath_length = rand_float(SHORTEST_BREATH_LENGTH, LONGEST_BREATH_LENGTH);
+	volume = rand_float(0.f, 1.f);
 
 	static constexpr size_t ANALYSIS_SAMPLE_LENGTH = 4096;
 	static constexpr size_t PADDED_LENGTH = 16384;
@@ -97,7 +98,7 @@ void Singer::process() {
 }
 
 void Singer::send() {
-	const float SAMPLE = waveform.get();
+	const float SAMPLE = waveform.get() * get_volume_envelope() * volume;
 
 	for (Connection& connection : connections) {
 		connection.singer->receive(SAMPLE);
@@ -120,4 +121,14 @@ void Singer::add_connection(Singer* singer, float weight) {
 
 std::vector<float>& Singer::get_result() {
 	return memory;
+}
+
+float Singer::get_volume_envelope() {
+	float elapsed = breath_progress * breath_length;
+	if (elapsed < ATTACK_LENGTH) {
+		return elapsed / ATTACK_LENGTH;
+	} else if (elapsed > breath_length - RELEASE_LENGTH) {
+		return (elapsed - breath_length + RELEASE_LENGTH) / RELEASE_LENGTH;
+	}
+	return 1.f;
 }
