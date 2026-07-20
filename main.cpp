@@ -1,8 +1,7 @@
+#include "parameters.h"
 #include "singer.h"
 #include "export_audio.h"
 #include "random.h"
-
-constexpr size_t NUMBER_OF_SINGERS = 20; // TODO refactor into a parameters.h file
 
 struct PositionedSinger {
 	Singer* singer;

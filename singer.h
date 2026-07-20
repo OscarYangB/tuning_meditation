@@ -1,17 +1,7 @@
 #pragma once
 
 #include <vector>
-
-constexpr size_t SAMPLE_RATE = 44100;
-constexpr double TIME_ELAPSED = 1.0 / SAMPLE_RATE;
-constexpr size_t WAVEFORM_LENGTH = 2205;
-constexpr size_t SIMULATION_LENGTH = SAMPLE_RATE * 100;
-
-constexpr float GLOBAL_LOWEST_FREQUENCY = 200.f;
-constexpr float GLOBAL_HIGHEST_FREQUENCY = 1567.98f; // Highest note for a "soprano" singer is G6
-
-constexpr float SHORTEST_BREATH_LENGTH = 3.f;
-constexpr float LONGEST_BREATH_LENGTH = 8.f;
+#include "parameters.h"
 
 enum class NoteSelectMode {
 	RANDOM,
