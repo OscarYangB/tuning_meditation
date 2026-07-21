@@ -31,6 +31,9 @@ private:
 	std::vector<Connection> connections{};
 	double breath_progress = 0.0;
 	NoteSelectMode note_select_mode = NoteSelectMode::RANDOM;
+	bool is_stopped = false;
+	float long_rms_sum = 0.f;
+	float short_rms_sum = 0.f;
 
 	void change_note();
 	float get_volume_envelope();
@@ -42,6 +45,7 @@ public:
 	void receive(float sample);
 	void add_connection(Singer* singer, float weight);
 	std::vector<float>& get_result();
+	inline bool get_is_stopped() { return is_stopped; }
 };
 
 struct Connection {

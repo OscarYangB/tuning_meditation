@@ -43,18 +43,31 @@ int main() {
 
 	std::cout << "Initialized" << "\n";
 
-	for (int i = 0; i < SIMULATION_LENGTH; i++) { // TOOD End simulation using excitable media
+	size_t simulation_length = MAX_SIMULATION_LENGTH;
+	for (int i = 0; i < MAX_SIMULATION_LENGTH; i++) {
 		for (Singer& singer : singers) {
 			singer.process();
 		}
 		for (Singer& singer : singers) {
 			singer.send();
 		}
+
+		bool all_stopped = true;
+		for (Singer& singer : singers) {
+			all_stopped &= singer.get_is_stopped();
+		}
+		if (all_stopped) {
+			simulation_length = i + 1;
+			break;
+		}
 	}
 
-	std::cout << "Done" << "\n";
+	if (simulation_length == MAX_SIMULATION_LENGTH) {
+		std::cout << "Simulation reached maximum duration." << "\n";
+	}
+	std::cout << "Done" << '\n';
 
-	std::vector<float>& left = singers[0].get_result();
-	std::vector<float>& right = singers[1].get_result();
-	export_audio_stereo(left.data(), right.data(), SIMULATION_LENGTH);
+	for (int i = 0; i < singers.size(); i++) {
+		export_audio(singers[i].get_result().data(), simulation_length, "output_" + std::to_string(i) + ".wav");
+	}
 }

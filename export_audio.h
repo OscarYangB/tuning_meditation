@@ -18,14 +18,14 @@ inline void normalize_audio(float* data, size_t length) {
 	}
 }
 
-inline void export_audio(float* data, size_t length) {
+inline void export_audio(float* data, size_t length, std::string name) {
 	const size_t SAMPLE_SIZE = sizeof(float);
 	const size_t CHANNELS = 1;
 	const size_t SAMPLE_RATE = 44100;
 
 	normalize_audio(data, length);
 
-	std::ofstream output_file("audio_export.wav", std::ios::binary);
+	std::ofstream output_file(name, std::ios::binary);
 
 	output_file << "RIFF";
 	uint32_t file_size = length * SAMPLE_SIZE + 44 - 8;
@@ -46,7 +46,7 @@ inline void export_audio(float* data, size_t length) {
 	output_file.close();
 }
 
-inline void export_audio_stereo(float* left, float* right, size_t length) {
+inline void export_audio_stereo(float* left, float* right, size_t length, std::string name) {
 	const size_t SAMPLE_SIZE = sizeof(float);
 	const size_t CHANNELS = 2;
 	const size_t SAMPLE_RATE = 44100;
@@ -54,7 +54,7 @@ inline void export_audio_stereo(float* left, float* right, size_t length) {
 	normalize_audio(left, length);
 	normalize_audio(right, length);
 
-	std::ofstream output_file("audio_export.wav", std::ios::binary);
+	std::ofstream output_file(name, std::ios::binary);
 
 	output_file << "RIFF";
 	uint32_t file_size = length * CHANNELS * SAMPLE_SIZE + 44 - 8;

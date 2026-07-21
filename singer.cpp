@@ -31,6 +31,10 @@ void Singer::change_note() {
 	breath_length = rand_float(SHORTEST_BREATH_LENGTH, LONGEST_BREATH_LENGTH);
 	volume = rand_float(0.f, 1.f);
 
+	if (std::sqrt(short_rms_sum / SHORT_RMS_LENGTH) < std::sqrt(long_rms_sum / LONG_RMS_LENGTH) * STOPPING_THRESHOLD) {
+		is_stopped = true;
+	}
+
 	static constexpr size_t ANALYSIS_SAMPLE_LENGTH = 4096;
 	static constexpr size_t PADDED_LENGTH = 16384;
 	if (memory.size() < ANALYSIS_SAMPLE_LENGTH) {
@@ -75,8 +79,12 @@ void Singer::change_note() {
 			return frequency < lowest_frequency || frequency > highest_frequency;
 		});
 		frequency_peaks.erase(iter, frequency_peaks.end());
-		waveform.frequency = frequency_peaks[rand_int(0, frequency_peaks.size())];
-		waveform.frequency *= rand_float(1.f - PITCH_VARIANCE, 1.f + PITCH_VARIANCE);
+		if (frequency_peaks.empty()) {
+			is_stopped = true;
+		} else {
+			waveform.frequency = frequency_peaks[rand_int(0, frequency_peaks.size())];
+			waveform.frequency *= rand_float(1.f - PITCH_VARIANCE, 1.f + PITCH_VARIANCE);
+		}
 		note_select_mode = NoteSelectMode::RANDOM;
 	}
 }
@@ -86,15 +94,33 @@ Singer::Singer(size_t id, std::array<float, WAVEFORM_LENGTH> waveform, float low
 	this->waveform = {waveform};
 	this->lowest_frequency = lowest_frequency;
 	this->highest_frequency = highest_frequency;
-	memory.reserve(SIMULATION_LENGTH);
+	memory.reserve(MAX_SIMULATION_LENGTH);
 	change_note();
 }
 
 void Singer::process() {
+	if (!memory.empty()) {
+		if (memory.size() > SHORT_RMS_LENGTH) {
+			short_rms_sum -= std::pow(memory[memory.size() - 1 - SHORT_RMS_LENGTH], 2.f);
+		}
+		short_rms_sum += std::pow(memory[memory.size() - 1], 2.f);
+		short_rms_sum = std::max(short_rms_sum, 0.f);
+
+		if (memory.size() > LONG_RMS_LENGTH) {
+			long_rms_sum -= std::pow(memory[memory.size() - 1 - LONG_RMS_LENGTH], 2.f);
+		}
+		long_rms_sum += std::pow(memory[memory.size() - 1], 2.f);
+		long_rms_sum = std::max(long_rms_sum, 0.f);
+	}
+
 	memory.emplace_back();
 }
 
 void Singer::send() {
+	if (is_stopped) {
+		return;
+	}
+
 	const float SAMPLE = waveform.get() * get_volume_envelope() * volume;
 
 	for (Connection& connection : connections) {
