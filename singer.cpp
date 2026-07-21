@@ -20,7 +20,7 @@ std::array<float, WAVEFORM_LENGTH> make_waveform() {
 
 float Singer::Waveform::get() {
 	float sample = data[std::floor(WAVEFORM_LENGTH * progress)];
-	progress += frequency * TIME_ELAPSED;
+	progress += frequency * frequency_modulation * TIME_ELAPSED;
 	if (progress > 1.0) {
 		progress -= 1.0;
 	}
@@ -30,6 +30,9 @@ float Singer::Waveform::get() {
 void Singer::change_note() {
 	breath_length = rand_float(SHORTEST_BREATH_LENGTH, LONGEST_BREATH_LENGTH);
 	volume = rand_float(0.f, 1.f);
+
+	vibrato_waveform.frequency = rand_float(MIN_VIBRATO_FREQUENCY, MAX_VIBRATO_FREQUENCY);
+	vibrato_amplitude = rand_float(0.f, 1.f);
 
 	if (std::sqrt(short_rms_sum / SHORT_RMS_LENGTH) < std::sqrt(long_rms_sum / LONG_RMS_LENGTH) * STOPPING_THRESHOLD) {
 		is_stopped = true;
@@ -91,10 +94,16 @@ void Singer::change_note() {
 
 Singer::Singer(size_t id, std::array<float, WAVEFORM_LENGTH> waveform, float lowest_frequency, float highest_frequency) {
 	this->id = id;
-	this->waveform = {waveform};
+	this->waveform = {waveform, 0.f, rand_float(0.f, 1.f)};
 	this->lowest_frequency = lowest_frequency;
 	this->highest_frequency = highest_frequency;
 	memory.reserve(MAX_SIMULATION_LENGTH);
+	std::array<float, WAVEFORM_LENGTH> vibrato_signal{};
+	for (int i = 0; i < WAVEFORM_LENGTH; i++) {
+		vibrato_signal[i] = std::sin(2.f * M_PI * (static_cast<float>(i) / WAVEFORM_LENGTH));
+	}
+	vibrato_waveform = {vibrato_signal, rand_float(MIN_VIBRATO_FREQUENCY, MAX_VIBRATO_FREQUENCY), rand_float(0.f, 1.f)};
+	vibrato_amplitude = rand_float(0.f, 1.f);
 	change_note();
 }
 
@@ -121,6 +130,7 @@ void Singer::send() {
 		return;
 	}
 
+	waveform.frequency_modulation = 1.f + vibrato_waveform.get() * MAX_VIBRATO_AMPLITUDE * vibrato_amplitude;
 	const float SAMPLE = waveform.get() * get_volume_envelope() * volume;
 
 	for (Connection& connection : connections) {

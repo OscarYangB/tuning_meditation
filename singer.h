@@ -16,6 +16,7 @@ private:
 		std::array<float, WAVEFORM_LENGTH> data;
 		float frequency;
 		double progress = 0.0;
+		float frequency_modulation = 1.f;
 
 		float get();
 	};
@@ -27,6 +28,8 @@ private:
 	std::vector<float> memory;
 	double breath_length;
 	float volume;
+	Waveform vibrato_waveform;
+	float vibrato_amplitude;
 
 	std::vector<Connection> connections{};
 	double breath_progress = 0.0;
