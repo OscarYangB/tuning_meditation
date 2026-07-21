@@ -9,7 +9,7 @@ struct PositionedSinger {
 	float y;
 };
 
-void randomly_position_singers(std::vector<Singer>& singers) { // TODO disconnect far-apart nodes
+void randomly_position_singers(std::vector<Singer>& singers) {
 	std::vector<PositionedSinger> positioned_singers{};
 
 	for (Singer& singer : singers) {
@@ -20,10 +20,13 @@ void randomly_position_singers(std::vector<Singer>& singers) { // TODO disconnec
 
 	for (int i = 0; i < singers.size(); i++) {
 		for (int j = i + 1; j < singers.size(); j++) {
-			float distance = (std::sqrt(std::pow(positioned_singers[i].x - positioned_singers[j].x, 2) +
-										std::pow(positioned_singers[i].y - positioned_singers[j].y, 2))) / sqrt(2.0);
-			positioned_singers[i].singer->add_connection(positioned_singers[j].singer, 1.f - distance);
-			positioned_singers[j].singer->add_connection(positioned_singers[i].singer, 1.f - distance);
+			float distance = std::sqrt(std::pow(positioned_singers[i].x - positioned_singers[j].x, 2) +
+									   std::pow(positioned_singers[i].y - positioned_singers[j].y, 2));
+			if (distance > MAX_DISTANCE) {
+				continue; // Don't add connections to nodes that are really far away
+			}
+			positioned_singers[i].singer->add_connection(positioned_singers[j].singer, 1.f / distance); // Sound in a gas decreases inverse-proportionally
+			positioned_singers[j].singer->add_connection(positioned_singers[i].singer, 1.f / distance);
 		}
 	}
 }

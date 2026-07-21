@@ -2,16 +2,14 @@
 #include "random.h"
 #include "frequency.h"
 
-constexpr size_t NUMBER_OF_HARMONICS = 10;
-
-std::array<float, WAVEFORM_LENGTH> make_waveform() { // TODO different timbres and vowels
+std::array<float, WAVEFORM_LENGTH> make_waveform() {
 	std::array<float, WAVEFORM_LENGTH> result{};
 
 	float amplitude = 1.f;
-	for (size_t harmonic_index = 1; harmonic_index < NUMBER_OF_HARMONICS; harmonic_index++) {
+	for (size_t harmonic_index = 1; harmonic_index < WAVEFORM_HARMONICS; harmonic_index++) {
 		const float FREQUENCY = harmonic_index * (1.f / WAVEFORM_LENGTH);
-		amplitude *= (0.5f + rand_float(-0.05f, 0.05f));
-		float random = rand_float(0.5f, 1.5f);
+		amplitude *= (WAVEFORM_PARTIAL_FALLOFF + rand_float(-WAVEFORM_PARTIAL_FALLOFF_VARIANCE, WAVEFORM_PARTIAL_FALLOFF_VARIANCE));
+		float random = rand_float(1.f - WAVEFORM_PARTIAL_AMPLITUDE_VARIANCE, 1.f + WAVEFORM_PARTIAL_AMPLITUDE_VARIANCE);
 		for (size_t i = 0; i < WAVEFORM_LENGTH; i++) {
 			result[i] += random * amplitude * std::sin(i * FREQUENCY * M_PI * 2.0);
 		}
@@ -50,9 +48,8 @@ void Singer::change_note() {
 			float frequency;
 			float dissonance;
 		};
-		static constexpr size_t NUMBER_OF_CANDIDATES = 20;
-		std::array<Candidate, NUMBER_OF_CANDIDATES> candidates{};
-		for (int i = 0; i < NUMBER_OF_CANDIDATES; i++) {
+		std::array<Candidate, PITCH_CANDIDATES> candidates{};
+		for (int i = 0; i < PITCH_CANDIDATES; i++) {
 			candidates[i] = {rand_float(lowest_frequency, highest_frequency)};
 			Waveform candidate_waveform = {waveform.data, candidates[i].frequency};
 			std::array<float, PADDED_LENGTH> candidate_signal{};
@@ -78,8 +75,8 @@ void Singer::change_note() {
 			return frequency < lowest_frequency || frequency > highest_frequency;
 		});
 		frequency_peaks.erase(iter, frequency_peaks.end());
-		waveform.frequency = frequency_peaks[std::floor(rand_float(0, frequency_peaks.size()))];
-		//waveform.frequency = rand_float(waveform.frequency * 0.95f, waveform.frequency * 1.05f);
+		waveform.frequency = frequency_peaks[rand_int(0, frequency_peaks.size())];
+		waveform.frequency *= rand_float(1.f - PITCH_VARIANCE, 1.f + PITCH_VARIANCE);
 		note_select_mode = NoteSelectMode::RANDOM;
 	}
 }
@@ -106,8 +103,8 @@ void Singer::send() {
 
 	breath_progress += TIME_ELAPSED;
 	if (breath_progress > breath_length) {
-		change_note();
 		breath_progress -= breath_length;
+		change_note();
 	}
 }
 
@@ -124,11 +121,10 @@ std::vector<float>& Singer::get_result() {
 }
 
 float Singer::get_volume_envelope() {
-	float elapsed = breath_progress * breath_length;
-	if (elapsed < ATTACK_LENGTH) {
-		return elapsed / ATTACK_LENGTH;
-	} else if (elapsed > breath_length - RELEASE_LENGTH) {
-		return (elapsed - breath_length + RELEASE_LENGTH) / RELEASE_LENGTH;
+	if (breath_progress > breath_length - RELEASE_LENGTH) {
+		return 1.f - (breath_progress - breath_length + RELEASE_LENGTH) / RELEASE_LENGTH;
+	} else if (breath_progress < ATTACK_LENGTH) {
+		return breath_progress / ATTACK_LENGTH;
 	}
 	return 1.f;
 }
