@@ -57,15 +57,17 @@ void Singer::change_note() {
 		std::array<Candidate, PITCH_CANDIDATES> candidates{};
 		for (int i = 0; i < PITCH_CANDIDATES; i++) {
 			candidates[i] = {rand_float(lowest_frequency, highest_frequency)};
-			Waveform candidate_waveform = {waveform.data, candidates[i].frequency};
-			std::array<float, PADDED_LENGTH> candidate_signal{};
-			for (int j = 0; j < PADDED_LENGTH; j++) {
-				candidate_signal[j] = candidate_waveform.get();
+			if constexpr (PITCH_CANDIDATES > 1) {
+				Waveform candidate_waveform = {waveform.data, candidates[i].frequency};
+				std::array<float, PADDED_LENGTH> candidate_signal{};
+				for (int j = 0; j < PADDED_LENGTH; j++) {
+					candidate_signal[j] = candidate_waveform.get();
+				}
+				hann_window(candidate_signal.data(), PADDED_LENGTH);
+				std::vector<float> candidate_frequencies = fast_fourier_transform(candidate_signal.data(), PADDED_LENGTH, PADDED_LENGTH);
+				candidate_frequencies.resize(frequencies.size() / 2);
+				candidates[i].dissonance = calculate_dissonance(frequencies, candidate_frequencies, PADDED_LENGTH, SAMPLE_RATE);
 			}
-			hann_window(candidate_signal.data(), PADDED_LENGTH);
-			std::vector<float> candidate_frequencies = fast_fourier_transform(candidate_signal.data(), PADDED_LENGTH, PADDED_LENGTH);
-			candidate_frequencies.resize(frequencies.size() / 2);
-			candidates[i].dissonance = calculate_dissonance(frequencies, candidate_frequencies, PADDED_LENGTH, SAMPLE_RATE);
 		}
 		const Candidate* best_candidate = &candidates[0];
 		for (int i = 1; i < candidates.size(); i++) {
@@ -96,7 +98,9 @@ Singer::Singer(size_t id, std::array<float, WAVEFORM_LENGTH> waveform, float low
 	this->waveform = {waveform, 0.f, rand_float(0.f, 1.f)};
 	this->lowest_frequency = lowest_frequency;
 	this->highest_frequency = highest_frequency;
-	convolution = Convolution<CONVOLUTION_LENGTH>(convolution_frequencies);
+	if constexpr (USE_CONVOLUTION) {
+		convolution = Convolution(convolution_frequencies, 0);
+	}
 	memory.reserve(MAX_SIMULATION_LENGTH);
 	std::array<float, WAVEFORM_LENGTH> vibrato_signal{};
 	for (int i = 0; i < WAVEFORM_LENGTH; i++) {
@@ -128,13 +132,15 @@ void Singer::process() {
 void Singer::send() {
 	waveform.frequency_modulation = 1.f + vibrato_waveform.get() * MAX_VIBRATO_AMPLITUDE * vibrato_amplitude;
 	float sample = is_stopped ? 0.f : waveform.get() * get_volume_envelope() * volume;
-	sample = convolution.process(sample);
+		if constexpr (USE_CONVOLUTION) {
+		sample = convolution.process(sample);
+	}
 
 	for (Connection& connection : connections) {
 		connection.singer->receive(sample);
 	}
 
-	if (convolution.initialized) {
+	if (!USE_CONVOLUTION || convolution.initialized) {
 		breath_progress += TIME_ELAPSED;
 	}
 	if (breath_progress > breath_length) {

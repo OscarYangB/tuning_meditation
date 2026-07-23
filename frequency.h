@@ -156,7 +156,6 @@ inline float calculate_dissonance(const std::vector<float>& frequencies_1, const
 	return (0.5f * dissonance) / normalizing_scale;
 }
 
-template<size_t LENGTH>
 struct Convolution {
 	std::complex<float>* kernel_fourier;
 	std::vector<float> input_buffer_1;
@@ -169,15 +168,15 @@ struct Convolution {
 	std::vector<std::complex<float>> temp_buffer;
 	bool initialized = false;
 
-	Convolution(std::complex<float>* kernel_fourier) {
+	Convolution(std::complex<float>* kernel_fourier, size_t length) {
 		this->kernel_fourier = kernel_fourier;
-		input_buffer_1 = std::vector<float>(LENGTH);
-		input_buffer_2 = std::vector<float>(LENGTH);
-		output_buffer_1 = std::vector<std::complex<float>>(LENGTH);
-		output_buffer_2 = std::vector<std::complex<float>>(LENGTH);
-		temp_buffer = std::vector<std::complex<float>>(LENGTH);
+		input_buffer_1 = std::vector<float>(length);
+		input_buffer_2 = std::vector<float>(length);
+		output_buffer_1 = std::vector<std::complex<float>>(length);
+		output_buffer_2 = std::vector<std::complex<float>>(length);
+		temp_buffer = std::vector<std::complex<float>>(length);
 		index_1 = 0;
-		index_2 = LENGTH / 2;
+		index_2 = length / 2;
 	}
 
 	float process(float sample) {
@@ -185,21 +184,21 @@ struct Convolution {
 		input_buffer_2[index_2] = sample;
 		index_1++;
 		index_2++;
-		if (index_1 >= LENGTH) {
+		if (index_1 >= input_buffer_1.size()) {
 			index_1 = 0;
-			hann_window(input_buffer_1.data(), LENGTH);
+			hann_window(input_buffer_1.data(), input_buffer_1.size());
 			fast_fourier_transform(input_buffer_1.data(), input_buffer_1.size(), temp_buffer.data());
-			for (int i = 0; i < LENGTH; i++) {
+			for (int i = 0; i < temp_buffer.size(); i++) {
 				temp_buffer[i] *= kernel_fourier[i];
 			}
 			inverse_fast_fourier_transform(temp_buffer.data(), temp_buffer.size(), output_buffer_1.data());
 			initialized = true;
 		}
-		if (index_2 >= LENGTH) {
+		if (index_2 >= input_buffer_2.size()) {
 			index_2 = 0;
-			hann_window(input_buffer_2.data(), LENGTH);
+			hann_window(input_buffer_2.data(), input_buffer_2.size());
 			fast_fourier_transform(input_buffer_2.data(), input_buffer_2.size(), temp_buffer.data());
-			for (int i = 0; i < LENGTH; i++) {
+			for (int i = 0; i < temp_buffer.size(); i++) {
 				temp_buffer[i] *= kernel_fourier[i];
 			}
 			inverse_fast_fourier_transform(temp_buffer.data(), temp_buffer.size(), output_buffer_2.data());

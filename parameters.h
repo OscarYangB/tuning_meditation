@@ -31,3 +31,4 @@ constexpr float MAX_VIBRATO_FREQUENCY = 7.f;
 constexpr float MAX_VIBRATO_AMPLITUDE = 0.005f;
 
 constexpr size_t CONVOLUTION_LENGTH = 262144;
+constexpr bool USE_CONVOLUTION = false;

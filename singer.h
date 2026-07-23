@@ -31,7 +31,7 @@ private:
 	float volume;
 	Waveform vibrato_waveform;
 	float vibrato_amplitude;
-	Convolution<CONVOLUTION_LENGTH> convolution{nullptr};
+	Convolution convolution{nullptr, 0};
 
 	std::vector<Connection> connections{};
 	double breath_progress = 0.0;
