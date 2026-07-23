@@ -2,6 +2,7 @@
 
 #include <vector>
 #include "parameters.h"
+#include "frequency.h"
 
 enum class NoteSelectMode {
 	RANDOM,
@@ -30,6 +31,7 @@ private:
 	float volume;
 	Waveform vibrato_waveform;
 	float vibrato_amplitude;
+	Convolution<CONVOLUTION_LENGTH> convolution{nullptr};
 
 	std::vector<Connection> connections{};
 	double breath_progress = 0.0;
@@ -42,7 +44,7 @@ private:
 	float get_volume_envelope();
 
 public:
-	Singer(size_t id, std::array<float, WAVEFORM_LENGTH> waveform, float lowest_frequency, float highest_frequency);
+	Singer(size_t id, std::array<float, WAVEFORM_LENGTH> waveform, float lowest_frequency, float highest_frequency, std::complex<float>* convolution_frequencies);
 	void process();
 	void send();
 	void receive(float sample);

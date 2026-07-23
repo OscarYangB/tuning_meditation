@@ -37,6 +37,28 @@ inline std::vector<float> fast_fourier_transform(const float* input, size_t leng
 	return result;
 }
 
+inline void inverse_fast_fourier_transform(const std::complex<float>* input, size_t length, std::complex<float>* output, size_t s = 1) {
+	if (length == 1) {
+		output[0] = input[0];
+		return;
+	}
+
+	inverse_fast_fourier_transform(input, length / 2, output, s * 2);
+	inverse_fast_fourier_transform(input + s, length / 2, output + length / 2, s * 2);
+	for (int k = 0; k < length / 2; k++) {
+		auto p = output[k];
+		auto q = std::exp(std::complex<float>(0.f, 2.0 * M_PI * k / length)) * output[k+length/2];
+		output[k] = p + q;
+		output[k + length / 2] = p - q;
+	}
+
+	if (s == 1) {
+		for (int k = 0; k < length; k++) {
+			output[k] /= length;
+		}
+	}
+}
+
 inline void hann_window(float* data, size_t length) {
 	for (size_t i = 0; i < length; i++) {
 		data[i] *= std::pow(std::sin(M_PI * i / length), 2.f);
@@ -133,3 +155,55 @@ inline float calculate_dissonance(const std::vector<float>& frequencies_1, const
 
 	return (0.5f * dissonance) / normalizing_scale;
 }
+
+template<size_t LENGTH>
+struct Convolution {
+	std::complex<float>* kernel_fourier;
+	std::vector<float> input_buffer_1;
+	std::vector<float> input_buffer_2;
+	std::vector<std::complex<float>> output_buffer_1;
+	std::vector<std::complex<float>> output_buffer_2;
+	size_t index_1;
+	size_t index_2;
+
+	std::vector<std::complex<float>> temp_buffer;
+	bool initialized = false;
+
+	Convolution(std::complex<float>* kernel_fourier) {
+		this->kernel_fourier = kernel_fourier;
+		input_buffer_1 = std::vector<float>(LENGTH);
+		input_buffer_2 = std::vector<float>(LENGTH);
+		output_buffer_1 = std::vector<std::complex<float>>(LENGTH);
+		output_buffer_2 = std::vector<std::complex<float>>(LENGTH);
+		temp_buffer = std::vector<std::complex<float>>(LENGTH);
+		index_1 = 0;
+		index_2 = LENGTH / 2;
+	}
+
+	float process(float sample) {
+		input_buffer_1[index_1] = sample;
+		input_buffer_2[index_2] = sample;
+		index_1++;
+		index_2++;
+		if (index_1 >= LENGTH) {
+			index_1 = 0;
+			hann_window(input_buffer_1.data(), LENGTH);
+			fast_fourier_transform(input_buffer_1.data(), input_buffer_1.size(), temp_buffer.data());
+			for (int i = 0; i < LENGTH; i++) {
+				temp_buffer[i] *= kernel_fourier[i];
+			}
+			inverse_fast_fourier_transform(temp_buffer.data(), temp_buffer.size(), output_buffer_1.data());
+			initialized = true;
+		}
+		if (index_2 >= LENGTH) {
+			index_2 = 0;
+			hann_window(input_buffer_2.data(), LENGTH);
+			fast_fourier_transform(input_buffer_2.data(), input_buffer_2.size(), temp_buffer.data());
+			for (int i = 0; i < LENGTH; i++) {
+				temp_buffer[i] *= kernel_fourier[i];
+			}
+			inverse_fast_fourier_transform(temp_buffer.data(), temp_buffer.size(), output_buffer_2.data());
+		}
+		return initialized ? output_buffer_1[index_1].real() + output_buffer_2[index_2].real() : 0.f;
+	}
+};

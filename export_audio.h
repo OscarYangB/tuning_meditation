@@ -77,3 +77,12 @@ inline void export_audio_stereo(float* left, float* right, size_t length, std::s
 
 	output_file.close();
 }
+
+// Assumes 1 channel, 44100 sample rate, 32-bit floating point, little endian, audio PCM data
+inline std::vector<float> import_audio(const char* filepath) {
+	std::FILE* file = std::fopen(filepath, "r");
+	size_t length = std::filesystem::file_size(filepath) / sizeof(float);
+	std::vector<float> retval(length);
+	std::fread(retval.data(), sizeof(float), length, file);
+	return retval;
+}

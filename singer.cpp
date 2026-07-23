@@ -1,6 +1,5 @@
 #include "singer.h"
 #include "random.h"
-#include "frequency.h"
 
 std::array<float, WAVEFORM_LENGTH> make_waveform() {
 	std::array<float, WAVEFORM_LENGTH> result{};
@@ -92,11 +91,12 @@ void Singer::change_note() {
 	}
 }
 
-Singer::Singer(size_t id, std::array<float, WAVEFORM_LENGTH> waveform, float lowest_frequency, float highest_frequency) {
+Singer::Singer(size_t id, std::array<float, WAVEFORM_LENGTH> waveform, float lowest_frequency, float highest_frequency, std::complex<float>* convolution_frequencies) {
 	this->id = id;
 	this->waveform = {waveform, 0.f, rand_float(0.f, 1.f)};
 	this->lowest_frequency = lowest_frequency;
 	this->highest_frequency = highest_frequency;
+	convolution = Convolution<CONVOLUTION_LENGTH>(convolution_frequencies);
 	memory.reserve(MAX_SIMULATION_LENGTH);
 	std::array<float, WAVEFORM_LENGTH> vibrato_signal{};
 	for (int i = 0; i < WAVEFORM_LENGTH; i++) {
@@ -126,18 +126,17 @@ void Singer::process() {
 }
 
 void Singer::send() {
-	if (is_stopped) {
-		return;
-	}
-
 	waveform.frequency_modulation = 1.f + vibrato_waveform.get() * MAX_VIBRATO_AMPLITUDE * vibrato_amplitude;
-	const float SAMPLE = waveform.get() * get_volume_envelope() * volume;
+	float sample = is_stopped ? 0.f : waveform.get() * get_volume_envelope() * volume;
+	sample = convolution.process(sample);
 
 	for (Connection& connection : connections) {
-		connection.singer->receive(SAMPLE);
+		connection.singer->receive(sample);
 	}
 
-	breath_progress += TIME_ELAPSED;
+	if (convolution.initialized) {
+		breath_progress += TIME_ELAPSED;
+	}
 	if (breath_progress > breath_length) {
 		breath_progress -= breath_length;
 		change_note();
